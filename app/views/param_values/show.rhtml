@@ -1,0 +1,18 @@
+<p>
+  <b>Value:</b>
+  <%=h @param_value.value %>
+</p>
+
+<p>
+  <b>Param name:</b>
+  <%=h @param_value.param_name_id %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @param_value.updated_at %>
+</p>
+
+
+<%= link_to 'Edit', edit_param_value_path(@param_value) %> |
+<%= link_to 'Back', param_values_path %>

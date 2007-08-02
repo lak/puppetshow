@@ -1,0 +1,24 @@
+<h1>Listing param_values</h1>
+
+<table>
+  <tr>
+    <th>Value</th>
+    <th>Param name</th>
+    <th>Updated at</th>
+  </tr>
+  
+<% for param_value in @param_values %>
+  <tr>
+    <td><%=h param_value.value %></td>
+    <td><%=h param_value.param_name_id %></td>
+    <td><%=h param_value.updated_at %></td>
+    <td><%= link_to 'Show', param_value_path(param_value) %></td>
+    <td><%= link_to 'Edit', edit_param_value_path(param_value) %></td>
+    <td><%= link_to 'Destroy', param_value_path(param_value), :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New param_value', new_param_value_path %>

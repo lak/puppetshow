@@ -1,0 +1,27 @@
+<h1>Editing fact_value</h1>
+
+<%= error_messages_for :fact_value %>
+
+<% form_for(:fact_value, :url => fact_value_path(@fact_value), :html => { :method => :put }) do |f| %>
+  <p>
+    <b>Value</b><br />
+    <%= f.text_field :value %>
+  </p>
+
+  <p>
+    <b>Fact name</b><br />
+    <%= f.text_field :fact_name_id %>
+  </p>
+
+  <p>
+    <b>Updated at</b><br />
+    <%= f.datetime_select :updated_at %>
+  </p>
+
+  <p>
+    <%= submit_tag "Update" %>
+  </p>
+<% end %>
+
+<%= link_to 'Show', fact_value_path(@fact_value) %> |
+<%= link_to 'Back', fact_values_path %>

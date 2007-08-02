@@ -1,0 +1,18 @@
+<p>
+  <b>Value:</b>
+  <%=h @fact_value.value %>
+</p>
+
+<p>
+  <b>Fact name:</b>
+  <%=h @fact_value.fact_name_id %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @fact_value.updated_at %>
+</p>
+
+
+<%= link_to 'Edit', edit_fact_value_path(@fact_value) %> |
+<%= link_to 'Back', fact_values_path %>

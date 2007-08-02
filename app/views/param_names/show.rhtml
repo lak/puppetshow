@@ -1,0 +1,23 @@
+<p>
+  <b>Name:</b>
+  <%=h @param_name.name %>
+</p>
+
+<p>
+  <b>Resource:</b>
+  <%=h @param_name.resource_id %>
+</p>
+
+<p>
+  <b>Line:</b>
+  <%=h @param_name.line %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @param_name.updated_at %>
+</p>
+
+
+<%= link_to 'Edit', edit_param_name_path(@param_name) %> |
+<%= link_to 'Back', param_names_path %>

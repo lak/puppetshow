@@ -1,0 +1,18 @@
+<p>
+  <b>Filename:</b>
+  <%=h @source_file.filename %>
+</p>
+
+<p>
+  <b>Path:</b>
+  <%=h @source_file.path %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @source_file.updated_at %>
+</p>
+
+
+<%= link_to 'Edit', edit_source_file_path(@source_file) %> |
+<%= link_to 'Back', source_files_path %>

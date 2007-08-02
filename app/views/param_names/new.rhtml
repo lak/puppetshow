@@ -1,0 +1,31 @@
+<h1>New param_name</h1>
+
+<%= error_messages_for :param_name %>
+
+<% form_for(:param_name, :url => param_names_path) do |f| %>
+  <p>
+    <b>Name</b><br />
+    <%= f.text_field :name %>
+  </p>
+
+  <p>
+    <b>Resource</b><br />
+    <%= f.text_field :resource_id %>
+  </p>
+
+  <p>
+    <b>Line</b><br />
+    <%= f.text_field :line %>
+  </p>
+
+  <p>
+    <b>Updated at</b><br />
+    <%= f.datetime_select :updated_at %>
+  </p>
+
+  <p>
+    <%= submit_tag "Create" %>
+  </p>
+<% end %>
+
+<%= link_to 'Back', param_names_path %>

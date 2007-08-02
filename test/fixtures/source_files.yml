@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+one:
+  id: 1
+  filename: MyString
+  path: MyString
+  updated_at: 2007-03-24 16:41:47
+two:
+  id: 2
+  filename: MyString
+  path: MyString
+  updated_at: 2007-03-24 16:41:47

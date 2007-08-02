@@ -1,0 +1,24 @@
+<h1>Listing fact_values</h1>
+
+<table>
+  <tr>
+    <th>Value</th>
+    <th>Fact name</th>
+    <th>Updated at</th>
+  </tr>
+  
+<% for fact_value in @fact_values %>
+  <tr>
+    <td><%=h fact_value.value %></td>
+    <td><%=h fact_value.fact_name_id %></td>
+    <td><%=h fact_value.updated_at %></td>
+    <td><%= link_to 'Show', fact_value_path(fact_value) %></td>
+    <td><%= link_to 'Edit', edit_fact_value_path(fact_value) %></td>
+    <td><%= link_to 'Destroy', fact_value_path(fact_value), :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New fact_value', new_fact_value_path %>

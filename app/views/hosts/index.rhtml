@@ -1,0 +1,34 @@
+<h1>Listing hosts</h1>
+
+<table>
+  <tr>
+    <th>Name</th>
+    <th>Ip</th>
+    <th>Last compile</th>
+    <th>Last freshcheck</th>
+    <th>Last report</th>
+    <th>Source file</th>
+    <th>Exported</th>
+    <th>Updated at</th>
+  </tr>
+  
+<% for host in @hosts %>
+  <tr>
+    <td><%=h host.name %></td>
+    <td><%=h host.ip %></td>
+    <td><%=h host.last_compile %></td>
+    <td><%=h host.last_freshcheck %></td>
+    <td><%=h host.last_report %></td>
+    <td><%=h host.source_file_id %></td>
+    <td><%=h host.exported %></td>
+    <td><%=h host.updated_at %></td>
+    <td><%= link_to 'Show', host_path(host) %></td>
+    <td><%= link_to 'Edit', edit_host_path(host) %></td>
+    <td><%= link_to 'Destroy', host_path(host), :confirm => 'Are you sure?', :method => :delete %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New host', new_host_path %>

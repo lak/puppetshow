@@ -1,0 +1,38 @@
+<p>
+  <b>Title:</b>
+  <%=h @resource.title %>
+</p>
+
+<p>
+  <b>Restype:</b>
+  <%=h @resource.restype %>
+</p>
+
+<p>
+  <b>Host:</b>
+  <%=h @resource.host_id %>
+</p>
+
+<p>
+  <b>Source file:</b>
+  <%=h @resource.source_file_id %>
+</p>
+
+<p>
+  <b>Exported:</b>
+  <%=h @resource.exported %>
+</p>
+
+<p>
+  <b>Line:</b>
+  <%=h @resource.line %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @resource.updated_at %>
+</p>
+
+
+<%= link_to 'Edit', edit_resource_path(@resource) %> |
+<%= link_to 'Back', resources_path %>

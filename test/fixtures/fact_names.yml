@@ -1,0 +1,11 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+one:
+  id: 1
+  name: MyString
+  host_id: 1
+  updated_at: 2007-03-24 16:42:42
+two:
+  id: 2
+  name: MyString
+  host_id: 1
+  updated_at: 2007-03-24 16:42:42

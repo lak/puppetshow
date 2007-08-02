@@ -1,0 +1,45 @@
+<% if params[:format] == "html" %>
+<p>
+  <b>Name:</b>
+  <%=h @host.name %>
+</p>
+
+<p>
+  <b>Ip:</b>
+  <%=h @host.ip %>
+</p>
+
+<p>
+  <b>Last compile:</b>
+  <%=h @host.last_compile %>
+</p>
+
+<p>
+  <b>Last freshcheck:</b>
+  <%=h @host.last_freshcheck %>
+</p>
+
+<p>
+  <b>Last report:</b>
+  <%=h @host.last_report %>
+</p>
+
+<p>
+  <b>Source file:</b>
+  <%=h @host.source_file_id %>
+</p>
+
+<p>
+  <b>Exported:</b>
+  <%=h @host.exported %>
+</p>
+
+<p>
+  <b>Updated at:</b>
+  <%=h @host.updated_at %>
+</p>
+
+
+<%= link_to 'Edit', edit_host_path(@host) %> |
+<%= link_to 'Back', hosts_path %>
+<% end %>
