@@ -59,7 +59,11 @@ end
 
 # Include your application configuration below
 
-require 'ruby-debug'
+# Try to load ruby-debug, but don't fail if it's missing.
+begin
+    require 'ruby-debug'
+rescue MissingSourceFile
+end
 require 'puppet'
   class Array
      def to_h

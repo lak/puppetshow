@@ -41,5 +41,9 @@ unless defined?(Rails::Initializer)
     end
   end
 
-  Rails::Initializer.run(:set_load_path)
+  Rails::Initializer.run(:set_load_path) do |config|
+      config.load_paths += Dir["#{RAILS_ROOT}/vendor/gems/**"].map do |dir| 
+        File.directory?(lib = "#{dir}/lib") ? lib : dir
+      end
+  end
 end
