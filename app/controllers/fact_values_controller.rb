@@ -1,8 +1,11 @@
 class FactValuesController < ApplicationController
 
-  active_scaffold :fact_value do |config|
-    config.list.columns.exclude :updated_at
-    config.actions.exclude :show, :search, :delete, :nested
-  end
+  hobo_model_controller
+  auto_actions :all, :except => [:list, :show]
 
+  active_scaffold :fact_value do |config|
+    config.list.columns = [:fact_name, :value]
+    config.actions.exclude :show, :search, :delete, :update
+    config.columns[:fact_name].clear_link
+  end
 end

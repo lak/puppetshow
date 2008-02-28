@@ -13,7 +13,7 @@ module ActiveScaffold
         elsif column.list_ui and override_column_ui?(column.list_ui)
           send(override_column_ui(column.list_ui), column, record)
 
-        elsif column.inplace_edit
+        elsif column.inplace_edit and record.authorized_for?(:action => :update, :column => column.name)
           active_scaffold_inplace_edit(record, column)
         else
           value = record.send(column.name)
@@ -35,7 +35,7 @@ module ActiveScaffold
           formatted_value
         end
 
-        value = '&nbsp;' if value.nil? or value.empty? # fix for IE 6
+        value = '&nbsp;' if value.nil? or (value.respond_to?(:empty?) and value.empty?) # fix for IE 6
         return value
       end
 
@@ -48,7 +48,7 @@ module ActiveScaffold
           return text if column.singular_association? and column_empty?(text)
 
           url_options = params_for(:action => nil, :id => record.id, :link => text)
-          if column.singular_association? and associated = record.send(column.association.name)
+          if column.singular_association? and column.link.action != 'nested' and associated = record.send(column.association.name)
             url_options[:id] = associated.id
           end
 
@@ -74,10 +74,10 @@ module ActiveScaffold
       ##
       def active_scaffold_column_checkbox(column, record)
         column_value = record.send(column.name)
-        if column.inplace_edit
+        if column.inplace_edit and record.authorized_for?(:action => :update, :column => column.name)
           id_options = {:id => record.id.to_s, :action => 'update_column', :name => column.name.to_s}
           tag_options = {:tag => "span", :id => element_cell_id(id_options), :class => "in_place_editor_field"}
-          script = remote_function(:url => {:controller => params_for[:controller], :action => "update_column", :column => column.name, :id => record.id.to_s, :value => !column_value}) 
+          script = remote_function(:url => {:controller => params_for[:controller], :action => "update_column", :column => column.name, :id => record.id.to_s, :value => !column_value})
           content_tag(:span, check_box_tag(tag_options[:id], 1, column_value || column_value == 1, {:onchange => script}) , tag_options)
         else
           check_box_tag(nil, 1, column_value || column_value == 1, :disabled => true)
@@ -130,9 +130,17 @@ module ActiveScaffold
       # ==========
       # = Inline Edit =
       # ==========
-      def active_scaffold_inplace_edit(record, column)
+      def format_inplace_edit_column(record,column)
         value = record.send(column.name)
-        formatted_column = clean_column_value(format_column(value))
+        if column.list_ui == :checkbox
+          active_scaffold_column_checkbox(column, record)
+        else
+          clean_column_value(format_column(value))
+        end
+      end
+
+      def active_scaffold_inplace_edit(record, column)
+        formatted_column = format_inplace_edit_column(record,column)
         id_options = {:id => record.id.to_s, :action => 'update_column', :name => column.name.to_s}
         tag_options = {:tag => "span", :id => element_cell_id(id_options), :class => "in_place_editor_field"}
         in_place_editor_options = {:url => {:controller => params_for[:controller], :action => "update_column", :column => column.name, :id => record.id.to_s},
@@ -141,6 +149,7 @@ module ActiveScaffold
          :loading_text => as_("Loading…"),
          :save_text => as_("Update"),
          :saving_text => as_("Saving…"),
+         :options => "{method: 'post'}",
          :script => true}.merge(column.options)
         content_tag(:span, formatted_column, tag_options) + in_place_editor(tag_options[:id], in_place_editor_options)
       end

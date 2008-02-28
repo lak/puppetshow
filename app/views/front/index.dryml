@@ -1,0 +1,22 @@
+<page>
+
+  <body: class="front-page"/>
+
+  <content-header:>
+    <h1 class="front-page-title">Welcome to <app-name/></h1>
+    <section class="welcome-message">
+    </section>
+  </content-header>
+
+  <content-body:>
+    <%= render :active_scaffold => 'hosts',
+        :conditions => ['last_compile > ?', Time.now - 5.minutes],
+        :label => "Hosts that have recently compiled a catalog:"
+    %>
+    <%= render :active_scaffold => 'hosts',
+        :conditions => ['last_compile < ?', Time.now - 60.minutes],
+        :label => "Hosts that haven't compiled a catalog in the last hour:"
+    %>
+  </content-body>
+  
+</page>

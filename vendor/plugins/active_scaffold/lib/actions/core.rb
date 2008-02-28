@@ -67,13 +67,19 @@ module ActiveScaffold::Actions
     # Override this method on your controller to define conditions to be used when querying a recordset (e.g. for List). The return of this method should be any format compatible with the :conditions clause of ActiveRecord::Base's find.
     def conditions_for_collection
     end
+    def joins_for_collection
+    end
 
     # Builds search conditions by search params for column names. This allows urls like "contacts/list?company_id=5".
     def conditions_from_params
       conditions = nil
       params.reject {|key, value| [:controller, :action, :id].include?(key.to_sym)}.each do |key, value|
         next unless active_scaffold_config.model.column_names.include?(key)
-        conditions = merge_conditions(conditions, ["#{active_scaffold_config.model.table_name}.#{key.to_s} = ?", value])
+        if value.is_a?(Array)
+          conditions = merge_conditions(conditions, ["#{active_scaffold_config.model.table_name}.#{key.to_s} in (?)", value])
+        else
+          conditions = merge_conditions(conditions, ["#{active_scaffold_config.model.table_name}.#{key.to_s} = ?", value])
+        end
       end
       conditions
     end

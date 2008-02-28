@@ -1,3 +1,29 @@
+require 'puppet/rails'
+module Rails
+  class Configuration
+    def database_configuration
+      Puppet[:config] = "/etc/puppet/puppet.conf"
+      Puppet.parse_config
+      pm_conf = Puppet.settings.instance_variable_get(:@values)[:puppetmasterd]
+      conf = YAML::load(ERB.new(IO.read(database_configuration_file)).result)
+      unless pm_conf.nil? or ! pm_conf[:storeconfigs]
+        conf.each do |k, v|
+          v["database"] = pm_conf[:dbname] 
+          v["username"] = pm_conf[:dbuser] 
+          v["password"] = pm_conf[:dbpassword] 
+          v["host"] = pm_conf[:dbserver] 
+          v["socket"] = pm_conf[:dbsocket] 
+          v["adapter"] = pm_conf[:dbadapter] 
+        
+          if pm_conf[:dbadapter] =~ /^sqlite/
+            v["database"] = pm_conf[:dblocation]
+          end
+        end
+      end
+      conf
+    end
+  end
+end
 # Be sure to restart your web server when you modify this file.
 
 # Uncomment below to force Rails into production mode when 
@@ -5,13 +31,14 @@
 # ENV['RAILS_ENV'] ||= 'production'
 
 # Specifies gem version of Rails to use when vendor/rails is not present
-RAILS_GEM_VERSION = '1.2.3' unless defined? RAILS_GEM_VERSION
+#RAILS_GEM_VERSION = '1.2.3' unless defined? RAILS_GEM_VERSION
 
 # Bootstrap the Rails environment, frameworks, and default configuration
 require File.join(File.dirname(__FILE__), 'boot')
 
 Rails::Initializer.run do |config|
   # Settings in config/environments/* take precedence over those specified here
+  config.action_controller.session = { :session_key => "_puppetshow_session", :secret => "dd02c7c2232759874e1c205587017bed"}
   
   # Skip frameworks you're not going to use (only works if using vendor/rails)
   # config.frameworks -= [ :action_web_service, :action_mailer ]
@@ -28,7 +55,7 @@ Rails::Initializer.run do |config|
 
   # Use the database for sessions instead of the file system
   # (create the session table with 'rake db:sessions:create')
-  # config.action_controller.session_store = :active_record_store
+  config.action_controller.session_store = :active_record_store
 
   # Use SQL instead of Active Record's schema dumper when creating the test database.
   # This is necessary if your schema can't be completely dumped by the schema dumper, 
@@ -59,14 +86,12 @@ end
 
 # Include your application configuration below
 
-require 'ruby-debug'
-require 'puppet'
-  class Array
-     def to_h
-       if all?{|e| e.respond_to?(:size, :inject) and e.size == 2}
-         inject({}){|h,(k,v)| h[k] = v; h}
-       else
-         Hash[*self]
-       end
-     end 
-  end
+class Array
+   def to_h
+     if all?{|e| e.respond_to?(:size, :inject) and e.size == 2}
+       inject({}){|h,(k,v)| h[k] = v; h}
+     else
+       Hash[*self]
+     end
+   end 
+end

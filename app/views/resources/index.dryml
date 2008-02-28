@@ -1,0 +1,12 @@
+<page>
+
+  <body: class="resources"/>
+
+  <content-header:>
+  </content-header>
+
+  <content-body:>
+      <%= render :active_scaffold => 'resources' %>
+  </content-body>
+
+</page>

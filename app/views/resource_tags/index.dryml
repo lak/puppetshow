@@ -1,0 +1,12 @@
+<page>
+
+  <body: class="resource_tags"/>
+
+  <content-header:>
+  </content-header>
+
+  <content-body:>
+      <%= render :active_scaffold => 'resource_tags' %>
+  </content-body>
+
+</page>

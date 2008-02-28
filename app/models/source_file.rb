@@ -1,8 +1,3 @@
-class SourceFile < ActiveRecord::Base
-  has_one :host
-  has_one :resource
-
-  def to_label
-    "#{self.filename}"
-  end
+class SourceFile < Puppet::Rails::SourceFile
+  hobo_model
 end

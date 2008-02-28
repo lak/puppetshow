@@ -77,13 +77,13 @@ module ActiveScaffold
       end
 
       # easy way to include ActiveScaffold assets
-      def active_scaffold_includes
-        js = ActiveScaffold::Config::Core.javascripts.collect do |name|
-          javascript_include_tag(ActiveScaffold::Config::Core.asset_path(:javascript, name))
+      def active_scaffold_includes(frontend = :default)
+        js = ActiveScaffold::Config::Core.javascripts(frontend).collect do |name|
+          javascript_include_tag(ActiveScaffold::Config::Core.asset_path(name, frontend))
         end.join('')
 
-        css = stylesheet_link_tag(ActiveScaffold::Config::Core.asset_path(:stylesheet, "stylesheet.css"))
-        ie_css = stylesheet_link_tag(ActiveScaffold::Config::Core.asset_path(:stylesheet, "stylesheet-ie.css"))
+        css = stylesheet_link_tag(ActiveScaffold::Config::Core.asset_path("stylesheet.css", frontend))
+        ie_css = stylesheet_link_tag(ActiveScaffold::Config::Core.asset_path("stylesheet-ie.css", frontend))
 
         js + "\n" + css + "\n<!--[if IE]>" + ie_css + "<![endif]-->\n"
       end
@@ -122,6 +122,7 @@ module ActiveScaffold
         url_options = url_options.clone
         url_options[:action] = link.action
         url_options[:controller] = link.controller if link.controller
+        url_options.delete(:search) if link.controller and link.controller.to_s != params[:controller]
         url_options.merge! link.parameters if link.parameters
 
         html_options = {:class => link.action}
@@ -130,6 +131,10 @@ module ActiveScaffold
           # action link javascript needs to submit the proper method, but the normal html_options[:method]
           # argument leaves no way to extract the proper method from the rendered tag.
           url_options[:_method] = link.method
+
+          if link.method != :get and respond_to?(:protect_against_forgery?) and protect_against_forgery?
+            url_options[:authenticity_token] = form_authenticity_token
+          end
         else
           # Needs to be in html_options to as the adding _method to the url is no longer supported by Rails
           html_options[:method] = link.method
@@ -172,7 +177,8 @@ module ActiveScaffold
       end
 
       def column_calculation(column)
-        calculation = active_scaffold_config.model.calculate(column.calculate, column.name, :conditions => controller.send(:all_conditions), :include => controller.send(:active_scaffold_joins))
+        calculation = active_scaffold_config.model.calculate(column.calculate, column.name, :conditions => controller.send(:all_conditions),
+         :joins => controller.send(:joins_for_collection), :include => controller.send(:active_scaffold_joins))
       end
     end
   end

@@ -1,0 +1,12 @@
+<page>
+
+  <body: class="param_values"/>
+
+  <content-header:>
+  </content-header>
+
+  <content-body:>
+      <%= render :active_scaffold => 'param_values' %>
+  </content-body>
+
+</page>

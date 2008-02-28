@@ -1,5 +1,11 @@
 ActionController::Routing::Routes.draw do |map|
 
+  map.search  'search', :controller => 'front', :action => 'search'
+  map.homepage '', :controller => 'front', :action => 'index'
+
+  Hobo.add_routes(map)
+
+
   map.resources :collector
 
   map.connect 'resources/exported/:restype.:format', :controller => 'resources', :action => 'collect_exported'
@@ -17,7 +23,7 @@ ActionController::Routing::Routes.draw do |map|
 
   # You can have the root of your site routed by hooking up '' 
   # -- just remember to delete public/index.html.
-  map.connect '', :controller => "hosts"
+  #map.connect '', :controller => "hosts"
 
   # Allow downloading Web Service WSDL as a file with an extension
   # instead of a file named 'wsdl'
