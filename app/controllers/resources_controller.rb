@@ -1,13 +1,19 @@
 require 'puppetstuff'
 class ResourcesController < ApplicationController
   include PuppetStuff
+  
+  hobo_model_controller
+  auto_actions :all, :except => [:list, :show]
 
   layout "application", :except => "collect_exported"
   active_scaffold :resource do |config|
-    config.columns.exclude :resource_tags, :param_names
+    config.list.columns = [:name, :param_values, :resource_tags, :source_file, :line]
     config.columns[:param_values].label = "Parameters"
     config.columns[:param_values].includes = nil
-    config.columns[:puppet_tags].includes = nil
+    config.columns[:param_values].association.reverse = :resource
+    config.columns[:puppet_tags].association.reverse = :resource_tags
+    config.columns[:resource_tags].label = "Tags"
+    config.columns[:resource_tags].association.reverse = :resource
   end
 
   def collect_exported

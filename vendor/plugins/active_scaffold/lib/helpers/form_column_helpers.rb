@@ -5,7 +5,7 @@ module ActiveScaffold
       # This method decides which input to use for the given column.
       # It does not do any rendering. It only decides which method is responsible for rendering.
       def active_scaffold_input_for(column, scope = nil)
-        options = active_scaffold_input_options(column.name, scope)
+        options = active_scaffold_input_options(column, scope)
 
         # first, check if the dev has created an override for this specific field
         if override_form_field?(column)
@@ -18,8 +18,8 @@ module ActiveScaffold
         # fallback: we get to make the decision
         else
           if column.association
-            # note: i'm not sure if this branch would ever get used. left to our own devices, we render associations as subforms. only if form_ui == :select do we render selects/checkboxes ... and that routing goes through the active_scaffold_input_select method.
-            raise "Tell the ActiveScaffold team: I'm a real boy!"
+            # if we get here, it's because the column has a form_ui but not one ActiveScaffold knows about.
+            raise "Unknown form_ui `#{column.form_ui}' for column `#{column.name}'"
           elsif column.virtual?
             active_scaffold_input_virtual(column, options)
 
@@ -50,11 +50,11 @@ module ActiveScaffold
       end
 
       # the standard active scaffold options used for class, name and scope
-      def active_scaffold_input_options(column_name, scope = nil)
-        name = scope ? "record#{scope}[#{column_name}]" : "record[#{column_name}]"
-        options = { :name => name, :class => "#{column_name}-input" }
+      def active_scaffold_input_options(column, scope = nil)
+        name = scope ? "record#{scope}[#{column.name}]" : "record[#{column.name}]"
+        options = { :name => name, :class => "#{column.name}-input", :id => "record_#{column.name}_#{params[:eid] || params[:id]}"}
       end
-      
+
       ##
       ## Form input methods
       ##
@@ -73,17 +73,18 @@ module ActiveScaffold
       end
 
       def active_scaffold_input_plural_association(column, options)
-        associated = @record.send(column.association.name).collect {|r| r.id}
-        select_options = options_for_association(column.association)
+        associated_options = @record.send(column.association.name).collect {|r| [r.to_label, r.id]}
+        select_options = associated_options | options_for_association(column.association)
         return 'no options' if select_options.empty?
 
         html = '<ul class="checkbox-list">'
 
+        associated_ids = associated_options.collect {|a| a[1]}
         select_options.each_with_index do |option, i|
           label, id = option
           this_name = "#{options[:name]}[#{i}][id]"
           html << "<li>"
-          html << check_box_tag(this_name, id, associated.include?(id))
+          html << check_box_tag(this_name, id, associated_ids.include?(id))
           html << "<label for='#{this_name}'>"
           html << label
           html << "</label>"
@@ -101,6 +102,34 @@ module ActiveScaffold
           active_scaffold_input_plural_association(column, options)
         else
           select(:record, column.name, column.options, { :selected => @record.send(column.name) }, options)
+        end
+      end
+
+      # only works for singular associations
+      # requires RecordSelect plugin to be installed and configured.
+      # ... maybe this should be provided in a bridge?
+      def active_scaffold_input_record_select(column, options)
+        remote_controller = active_scaffold_controller_for(column.association.klass).controller_path
+
+        # if the opposite association is a :belongs_to, then only show records that have not been associated yet
+        params = if column.association and [:has_one, :has_many].include?(column.association.macro)
+          {column.association.primary_key_name => ''}
+        else
+          {}
+        end
+
+        if column.singular_association?
+          record_select_field(
+            "#{options[:name]}",
+            @record.send(column.name) || column.association.klass.new,
+            {:controller => remote_controller, :id => options[:id], :params => params.merge(:parent_id => @record.id, :parent_model => @record.class)}.merge(active_scaffold_input_text_options).merge(column.options)
+          )
+        elsif column.plural_association?
+          record_multi_select_field(
+            options[:name],
+            @record.send(column.name),
+            {:controller => remote_controller, :id => options[:id], :params => params.merge(:parent_id => @record.id, :parent_model => @record.class)}.merge(active_scaffold_input_text_options).merge(column.options)
+          )
         end
       end
 
@@ -202,7 +231,7 @@ module ActiveScaffold
           return :subsection
         elsif column.active_record_class.locking_column.to_s == column.name.to_s
           return :hidden
-        elsif column.association.nil? or column.form_ui == :select or !active_scaffold_config_for(column.association.klass).actions.include?(:subform)
+        elsif column.association.nil? or column.form_ui or !active_scaffold_config_for(column.association.klass).actions.include?(:subform)
           return :field
         else
           return :subform

@@ -3,8 +3,8 @@ module ActiveScaffold::DataStructures
     # provides a quick way to set any property of the object from a hash
     def initialize(action, options = {})
       # set defaults
-      self.action = action
-      self.label = action
+      self.action = action.to_s
+      self.label = action.to_s
       self.confirm = false
       self.type = :table
       self.inline = true
@@ -73,7 +73,7 @@ module ActiveScaffold::DataStructures
     # exclusive with popup? and page?
     def inline=(val)
       @inline = (val == true)
-      self.popup, self.page = false if @inline
+      self.popup = self.page = false if @inline
     end
     def inline?; @inline end
 
@@ -81,7 +81,13 @@ module ActiveScaffold::DataStructures
     # exclusive with inline? and page?
     def popup=(val)
       @popup = (val == true)
-      self.inline, self.page = false if @popup
+      if @popup
+        self.inline = self.page = false
+
+        # the :method parameter doesn't mix with the :popup parameter
+        # when/if we start using DHTML popups, we can bring :method back
+        self.method = nil
+      end
     end
     def popup?; @popup end
 
@@ -89,7 +95,16 @@ module ActiveScaffold::DataStructures
     # exclusive with inline? and popup?
     def page=(val)
       @page = (val == true)
-      self.inline, self.popup = false if @page
+      if @page
+        self.inline = self.popup = false
+
+        # when :method is defined, ActionView adds an onclick to use a form ...
+        # so it's best to just empty out :method whenever possible.
+        # we only ever need to know @method = :get for things that default to POST.
+        # the only things that default to POST are forms and ajax calls.
+        # when @page = true, we don't use ajax.
+        self.method = nil if method == :get
+      end
     end
     def page?; @page end
 

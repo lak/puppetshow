@@ -70,21 +70,22 @@ module ActiveRecordPermissions
     # intelligently combine multiple applicable methods.
     #
     # options[:action] should be a CRUD verb (:create, :read, :update, :destroy)
+    # options[:column] should be the name of a model attribute
     def authorized_for?(options = {})
-      options.assert_valid_keys :action, :column
       raise ArgumentError, "unknown action #{options[:action]}" if options[:action] and ![:create, :read, :update, :destroy].include?(options[:action])
 
+      # collect the possibly-related methods that actually exist
       methods = [
         column_security_method(options[:column]),
         action_security_method(options[:action]),
         column_and_action_security_method(options[:column], options[:action])
-      ].compact
+      ].compact.select {|m| respond_to?(m)}
 
-      # if any method actually exists and returns false, then return false
-      return false if methods.any? {|m| respond_to?(m) and !send(m)}
+      # if any method returns false, then return false
+      return false if methods.any? {|m| !send(m)}
 
       # if any method actually exists then it must've returned true, so return true
-      return true if methods.any? {|m| respond_to?(m)}
+      return true unless methods.empty?
 
       # if no method exists, return the default permission
       return ActiveRecordPermissions.default_permission
@@ -100,7 +101,8 @@ module ActiveRecordPermissions
     module ClassMethods
       # Class level just delegates to instance level
       def authorized_for?(*args)
-        self.new.authorized_for?(*args)
+        @authorized_for_delegatee ||= self.new
+        @authorized_for_delegatee.authorized_for?(*args)
       end
     end
 

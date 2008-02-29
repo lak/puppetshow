@@ -1,0 +1,12 @@
+<page>
+
+  <body: class="fact_values"/>
+
+  <content-header:>
+  </content-header>
+
+  <content-body:>
+      <%= render :active_scaffold => 'fact_values' %>
+  </content-body>
+
+</page>

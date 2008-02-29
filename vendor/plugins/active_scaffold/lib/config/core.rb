@@ -22,6 +22,15 @@ module ActiveScaffold::Config
     cattr_accessor :theme
     @@theme = :default
 
+    # lets you disable the DHTML history
+    def self.dhtml_history=(val)
+      @@dhtml_history = val
+    end
+    def self.dhtml_history?
+      @@dhtml_history ? true : false
+    end
+    @@dhtml_history = true
+
     # action links are used by actions to tie together. you can use them, too! this is a collection of ActiveScaffold::DataStructures::ActionLink objects.
     cattr_reader :action_links
     @@action_links = ActiveScaffold::DataStructures::ActionLinks.new
@@ -155,21 +164,34 @@ module ActiveScaffold::Config
       @model ||= @model_id.to_s.camelize.constantize
     end
 
-    def self.asset_path(type, filename)
-      "active_scaffold/#{ActiveScaffold::Config::Core.frontend.to_s}/#{filename}"
+    # warning - this won't work as a per-request dynamic attribute in rails 2.0.  You'll need to interact with Controller#generic_view_paths
+    def inherited_view_paths
+      @inherited_view_paths||=[]
     end
 
-    def self.javascripts
-      javascript_dir = File.join(RAILS_ROOT, "vendor", "plugins", ActiveScaffold::Config::Core.plugin_directory, "frontends", ActiveScaffold::Config::Core.frontend.to_s, "javascripts")
-      Dir.entries(javascript_dir).reject { |e| !e.match(/\.js/) }
+    # must be a class method so the layout doesn't depend on a controller that uses active_scaffold
+    # note that this is unaffected by per-controller frontend configuration.
+    def self.asset_path(filename, frontend = self.frontend)
+      "active_scaffold/#{frontend}/#{filename}"
+    end
+
+    # must be a class method so the layout doesn't depend on a controller that uses active_scaffold
+    # note that this is unaffected by per-controller frontend configuration.
+    def self.javascripts(frontend = self.frontend)
+      javascript_dir = File.join(RAILS_ROOT, "public", "javascripts", asset_path('', frontend))
+      Dir.entries(javascript_dir).reject { |e| !e.match(/\.js/) or (!self.dhtml_history? and e.match('dhtml_history')) }
     end
 
     # the ActiveScaffold-specific template paths
-    def self.template_search_path
-      search_path = []
+    # an instance method. this is the only place that pays attention to per-controller frontend configuration.
+    # note: for the rails 1.2.x rendering, this needs to be relative to app/views.
+    def template_search_path(frontend = self.frontend)
+      frontends_path = "../../vendor/plugins/#{ActiveScaffold::Config::Core.plugin_directory}/frontends"
+
+      search_path = self.inherited_view_paths.clone
       search_path << 'active_scaffold_overrides'
-      search_path <<  "../../vendor/plugins/#{ActiveScaffold::Config::Core.plugin_directory}/frontends/#{ActiveScaffold::Config::Core.frontend.to_s}/views" if ActiveScaffold::Config::Core.frontend.to_sym != :default
-      search_path << "../../vendor/plugins/#{ActiveScaffold::Config::Core.plugin_directory}/frontends/default/views"
+      search_path << "#{frontends_path}/#{frontend}/views" if frontend.to_sym != :default
+      search_path << "#{frontends_path}/default/views"
       return search_path
     end
 

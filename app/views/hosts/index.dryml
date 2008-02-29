@@ -1,0 +1,12 @@
+<page>
+
+  <body: class="hosts"/>
+
+  <content-header:>
+  </content-header>
+
+  <content-body:>
+      <%= render :active_scaffold => 'hosts' %>
+  </content-body>
+
+</page>

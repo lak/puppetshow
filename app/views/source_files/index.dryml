@@ -1,0 +1,12 @@
+<page>
+
+  <body: class="source_files"/>
+
+  <content-header:>
+  </content-header>
+
+  <content-body:>
+      <%= render :active_scaffold => 'source_files' %>
+  </content-body>
+
+</page>

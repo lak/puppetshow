@@ -1,0 +1,97 @@
+<!-- Navigation
+     Main nav bar, account nav bar (login, signup...), page nav
+  -->
+
+<!--- General Navigation -->
+  
+<def tag="navigation" attrs="current">
+  <ul merge-attrs>
+    <set-scoped current-navigation="&current">
+      <do param="default"/>
+    </set-scoped>
+  </ul>
+</def>
+
+<def tag="nav-item">
+  <set body="&parameters.default"/>
+  <li class="#{'current' if (c = scope.current_navigation) && c.downcase == body.downcase.gsub(/<.*?>/, '').strip}"
+      merge-attrs="&attributes - attrs_for(:a)">
+    <a merge-attrs="&attributes & attrs_for(:a)"><%= body %></a>
+  </li>
+</def>
+
+
+<!--- Account Navigation (log in / out / signup) -->
+
+<def tag="account-nav">
+  <ul class="account-nav">
+    <if test="&logged_in?">
+      <li class='nav-item'>Logged in as <view:login with="&current_user"/></li>
+      <li class='nav-item'><a href="&logout_url">Log out</a></li>
+    </if>
+    <else>
+      <set user="&Hobo::UserController.user_models.first"/>
+      <li class='nav-item'><a href="&login_url(user)">Log in</a></li>
+      <li if="&signup_url(user)" class='nav-item'><a href="&signup_url(user)">Sign up</a></li>
+    </else>
+  </ul>
+</def>
+
+
+<!--- Pagination Navigation -->
+
+<def tag="page-nav" attrs="params">
+  <if test="&@pages && @pages.length > 1">
+    <page-n-of-count/> - 
+    <first-page-link params="&params">|&lt;</first-page-link>
+    <previous-page-link params="&params">Previous</previous-page-link>
+    <next-page-link params="&params">Next</next-page-link>
+    <last-page-link params="&params">&gt|</last-page-link>
+  </if>
+</def>
+
+
+<def tag="page-n-of-count">
+  Page <%= @pages.current_page.number %> of <%= @pages.length %>
+</def>
+
+
+<def tag="previous-page-link">
+  <a if="&@pages && @pages.current.previous"
+     href="&url_for(params.merge(:page => @pages.current.previous))">
+    <do param="default">&laquo; Previous page</do>
+  </a>
+</def>
+
+
+<def tag="next-page-link">
+  <a if="&@pages && @pages.current.next"
+     href="&url_for(params.merge(:page => @pages.current.next))">
+    <do param="default">Next page &raqou;</do>
+  </a>
+</def>
+
+
+<def tag="first-page-link">
+  <a if="&@pages && @pages.first_page && @pages.current != @pages.first_page"
+     href="&url_for(params.merge(:page => @pages.first_page))">
+    <do param="default">&laquo; First page</do>
+  </a>
+</def>
+
+
+<def tag="last-page-link">
+  <a if="&@pages && @pages.last_page && @pages.current != @pages.last_page"
+     href="&url_for(params.merge(:page => @pages.last_page))">
+    <do param="default">Last page &raquo;</do>
+  </a>
+</def>
+
+<!-- magic nav, just to get you started -->
+<!-- write your own navigation using the <navigation> tag -->
+<def tag="magic-nav">
+  <navigation merge-attrs>
+    <nav-item href="#{base_url}/">Home</nav-item>
+    <nav-item repeat="&front_models[0..5]"><name/></nav-item>
+  </navigation>
+</def>

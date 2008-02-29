@@ -1,3 +1,3 @@
-class FactName < ActiveRecord::Base
-  has_many :fact_values, :dependent => :destroy
+class FactName < Puppet::Rails::FactName
+  hobo_model
 end

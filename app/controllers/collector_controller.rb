@@ -16,10 +16,10 @@ class CollectorController < RestController
         host.fact_names << fn
       end
       
-      @yaml[:resources].classes.each do |classname|
-        puppet_class = PuppetClass.find_or_create_by_name(classname)
-        host.puppet_classes << puppet_class
-      end
+#      @yaml[:resources].classes.each do |classname|
+#        puppet_class = PuppetClass.find_or_create_by_name(classname)
+#        host.puppet_classes << puppet_class
+#      end
      
       objects = []
 
