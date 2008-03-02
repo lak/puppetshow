@@ -8,7 +8,7 @@ module Rails
       conf = YAML::load(ERB.new(IO.read(database_configuration_file)).result)
       unless pm_conf.nil? or ! pm_conf[:storeconfigs]
         conf.each do |k, v|
-          v["database"] = pm_conf[:dbname] 
+          v["database"] = "puppet" unless pm_conf[:dbname] 
           v["username"] = pm_conf[:dbuser] 
           v["password"] = pm_conf[:dbpassword] 
           v["host"] = pm_conf[:dbserver] 

@@ -3,3 +3,18 @@
 <include src="rapid" plugin="hobo"/>
 
 <set-theme name="clean"/>
+
+<def tag="page" extend-with="app">
+    <page-without-app merge>
+        
+        <main-nav: replace>
+            <navigation class="main-nav">
+              <nav-item href="#{base_url}/">Main</nav-item>
+              <nav-item href="#{base_url}/hosts">Hosts</nav-item>
+              <nav-item href="#{base_url}/fact_values">Facts</nav-item>
+              <nav-item href="#{base_url}/resources">Resources</nav-item>
+            </navigation>
+        </main-nav:>
+    
+    </page-without-app>    
+</def>
