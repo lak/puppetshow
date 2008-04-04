@@ -30,7 +30,7 @@ require "hobo/enum_string"
 require "hobo/percentage"
 
 
-ActionView::Base.register_template_handler("dryml", Hobo::Dryml::TemplateHandler)
+ActionView::Template.register_template_handler("dryml", Hobo::Dryml::TemplateHandler)
 
 class ActionController::Base
 
