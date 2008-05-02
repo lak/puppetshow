@@ -1,9 +1,0 @@
-<def tag="page" extend-with="theme">
-  <page-without-theme merge>
-    <stylesheets: param>
-      <stylesheet name="reset"/>
-      <theme-stylesheet name="hobo"/>
-      <theme-stylesheet name="rapid-ui"/>
-    </stylesheets>
-  </page-without-theme>
-</def>  

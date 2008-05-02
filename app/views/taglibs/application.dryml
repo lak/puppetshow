@@ -2,7 +2,9 @@
 
 <include src="rapid" plugin="hobo"/>
 
-<set-theme name="clean"/>
+<set-theme name="puppetshow"/>
+
+<def tag="app-name">Puppet Show</def>
 
 <def tag="page" extend-with="app">
     <page-without-app merge>

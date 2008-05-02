@@ -2,7 +2,7 @@ class Host < Puppet::Rails::Host
   hobo_model
 
 
-  def viewable_by?(viewer, field)
-    !user.guest?
-  end
+#  def viewable_by?(viewer, field)
+#    !user.guest?
+#  end
 end

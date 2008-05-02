@@ -7,7 +7,7 @@ class ResourcesController < ApplicationController
 
   layout "application", :except => "collect_exported"
   active_scaffold :resource do |config|
-    config.list.columns = [:name, :param_values, :resource_tags, :source_file, :line]
+    config.list.columns = [:name, :param_values, :resource_tags]
     config.columns[:param_values].label = "Parameters"
     config.columns[:param_values].includes = nil
     config.columns[:param_values].association.reverse = :resource

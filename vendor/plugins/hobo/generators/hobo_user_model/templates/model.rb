@@ -1,6 +1,6 @@
 class <%= class_name %> < ActiveRecord::Base
 
-  hobo_user_model
+  hobo_user_model # Don't put anything above this
 
   fields do
     username :string, :login => true, :name => true
@@ -17,7 +17,7 @@ class <%= class_name %> < ActiveRecord::Base
   # def super_user?; true; end
 
   def creatable_by?(creator)
-    true
+    creator.administrator? || !administrator
   end
 
   def updatable_by?(updater, new)

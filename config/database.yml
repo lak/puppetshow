@@ -14,9 +14,10 @@
 development:
   adapter: mysql
   database: puppet
-  username: root
-  password:
+  username: puppet
+  password: puppet
   host: localhost
+  socket: "/var/run/mysqld/mysqld.sock"
 
 # Warning: The database defined as 'test' will be erased and
 # re-generated from your development database when you run 'rake'.
@@ -30,7 +31,8 @@ test:
 
 production:
   adapter: mysql
-  database: puppetstore_production
-  username: root
-  password: 
+  database: puppet
+  username: puppet
+  password: puppet
   host: localhost
+  socket: "/var/run/mysqld/mysqld.sock"

@@ -8,6 +8,13 @@ module Hobo
     end
      
     protected
+    
+    
+    def uid
+      @hobo_uid ||= 0
+      @hobo_uid += 1
+    end
+    
      
     def current_user
       # simple one-hit-per-request cache
@@ -40,66 +47,51 @@ module Hobo
     def subsite
       params[:controller].match(/([^\/]+)\//)._?[1]
     end
+
+    
+    IMPLICIT_ACTIONS = [:index, :show, :create, :update, :destroy]
      
-     
-    def object_url(*args)
+    def object_url(obj, *args)
       params = args.extract_options!
-      obj, action = args
-      action &&= action.to_s
+      action = args.first._?.to_sym
+      options, params = params.partition_hash([:subsite, :method, :format])
+      options[:subsite] ||= self.subsite
       
-      controller_name = controller_for(obj)
-      
-      subsite = params[:subsite] || self.subsite
-      
-      # TODO - what if you want if_available as a query param?
-      if_available = params.delete(:if_available)
-      return nil if if_available && 
-        ((action.nil? && obj.respond_to?(:typed_id) && !linkable?(obj.class, :show,  :subsite => subsite)) ||
-         (action.nil? && obj.is_a?(Class) &&           !linkable?(obj,       :index, :subsite => subsite)))
-      
-      base = subsite.blank? ? base_url : "/#{subsite}#{base_url}"
-      
-      parts = if obj.is_a? Class
-                [base, controller_name]
-                
-              elsif obj.is_a? Hobo::CompositeModel
-                [base, controller_name, obj.to_param]
-                
-              elsif obj.is_a? ActiveRecord::Base
-                if obj.new_record?
-                  [base, controller_name]
-                else
-                  raise HoboError.new("invalid object url: new for existing object") if action == "new"
-     
-                  klass = obj.class
-                  id = if klass.id_name?
-                         obj.id_name(true)
-                       else
-                         obj.to_param
-                       end
-                  
-                  [base, controller_name, id]
-                end
-                
-              elsif obj.is_a? Array    # warning - this breaks if we use `case/when Array`
-                owner = obj.proxy_owner
-                new_model = obj.proxy_reflection.klass
-                [object_url(owner), obj.proxy_reflection.name]
-                
-              else
-                raise HoboError.new("cannot create url for #{obj.inspect} (#{obj.class})")
-              end
-      url = parts.join("/")
+      if obj.respond_to?(:origin)
+        # Asking for URL of a collection, e.g. category/1/adverts or category/1/adverts/new
+        if action == :new
+          action_path = "#{obj.origin_attribute}/new"
+          action = "new_#{obj.origin_attribute.to_s.singularize}"
+        elsif action.nil?
+          action = obj.origin_attribute
+        end
+        obj = obj.origin
+        
+      else
+        action ||= case options[:method].to_s
+                   when 'put';    :update
+                   when 'post';   :create
+                   when 'delete'; :destroy
+                   else; obj.is_a?(Class) ? :index : :show
+                   end
 
-      case action
-      when nil       # do nothing
-      when "destroy" then params["_method"] = "DELETE"
-      when "update"  then params["_method"] = "PUT"
-      else url += "/#{action}" 
+        if action == :create && obj.try.new_record?
+          # Asking for url to post new record to
+          obj = obj.class
+        end
       end
+    
+      klass = obj.is_a?(Class) ? obj : obj.class
+      if Hobo::ModelRouter.linkable?(klass, action, options)
 
-      params = make_params(params - [:subsite])
-      params.blank? ? url : "#{url}?#{params}"
+        path = obj.to_url_path or HoboError.new("cannot create url for #{obj.inspect} (#{obj.class})")
+        url = "#{base_url}#{'/' + subsite unless subsite.blank?}/#{path}"
+
+        url += "/#{action_path || action}" unless action.in?(IMPLICIT_ACTIONS)
+
+        params = make_params(params)
+        params.blank? ? url : "#{url}?#{params}"
+      end
     end
      
      
@@ -127,31 +119,16 @@ module Hobo
       hash.map {|k,v| _as_params(k, v)}.join("&")
     end
      
-     
-    def dom_id(*args)
-      if args.length == 0
-        Hobo.dom_id(this)
-      else
-        Hobo.dom_id(*args)
-      end
-    rescue ArgumentError
-      ""
-    end
-    
     
     def type_id(type=nil)
-      type ||= this.is_a?(Class) ? this : this_type
-      type == NilClass ? "" : Hobo.type_id(type || this.class)
+      type ||= (this.is_a?(Class) && this) || this_type || this.class
+      HoboFields.to_name(type) || type.name.underscore.gsub("/", "__")
     end
-    
+
     
     def type_and_field(*args)
-      if args.empty?
-        this_parent && this_field && "#{Hobo.type_id(this_parent.class)}_#{this_field}"
-      else
-        type, field = args
-        "#{Hobo.type_id(type)}_#{field}"
-      end
+      type, field = args.empty? ? [this_parent.class, this_field] : args
+      "#{type.typed_id}_#{field}" if type.respond_to?(:typed_id)
     end
      
      
@@ -160,6 +137,8 @@ module Hobo
       empty = true
       if this.respond_to?(:each_index)
         this.each_index {|i| empty = false; new_field_context(i) { res << yield } }
+      elsif this.is_a?(Hash)
+        this.map {|key, value| empty = false; self.this_key = key; new_object_context(value) { res << yield } }
       else
         this.map {|e| empty = false; new_object_context(e) { res << yield } }
       end
@@ -203,8 +182,8 @@ module Hobo
       else
         object, field = args.length == 2 ? args : [this, args.first]
         
-        if !field and object.respond_to?(:proxy_reflection)
-          Hobo.can_edit?(current_user, object.proxy_owner, object.proxy_reflection.name)
+        if !field && object.respond_to?(:origin)
+          Hobo.can_edit?(current_user, object.origin, object.origin_attribute)
         else
           Hobo.can_edit?(current_user, object, field)
         end
@@ -225,12 +204,14 @@ module Hobo
           object = this
         end
       end
-      
-      if !field and object.respond_to?(:proxy_reflection)
-        Hobo.can_view?(current_user, object.proxy_owner, object.proxy_reflection.name)
-      else
-        Hobo.can_view?(current_user, object, field)
-      end
+
+      @can_view_cache ||= {}
+      @can_view_cache[ [object, field] ] ||= 
+        if !field && object.respond_to?(:origin)
+          Hobo.can_view?(current_user, object.origin, object.origin_attribute)
+        else
+          Hobo.can_view?(current_user, object, field)
+        end
     end
      
      
@@ -272,8 +253,8 @@ module Hobo
      
     def param_name_for_this(foreign_key=false)
       return "" unless form_this
-      name = if foreign_key and this_type.respond_to?(:macro) and this_type.macro == :belongs_to
-               param_name_for(form_this, form_field_path[0..-2] + [this_type.primary_key_name])
+      name = if foreign_key && (refl = this_field_reflection) && refl.macro == :belongs_to
+               param_name_for(form_this, form_field_path[0..-2] + [refl.primary_key_name])
              else
                param_name_for(form_this, form_field_path)
              end
@@ -282,21 +263,10 @@ module Hobo
     end
      
      
-    def selector_type
-      if this.is_a? ActiveRecord::Base
-        this.class
-      elsif this.respond_to? :member_class
-        this.member_class
-      elsif this == @this
-        @model
-      end
-    end
-     
-     
     def transpose_with_field(field, collection=nil)
       collection ||= this
       matrix = collection.map {|obj| obj.send(field) }
-      max_length = matrix.every(:length).max
+      max_length = matrix.*.length.max
       matrix = matrix.map do |a|
         a + [nil] * (max_length - a.length)
       end
@@ -306,9 +276,7 @@ module Hobo
      
     def new_for_current_user(model_or_assoc=nil)
       model_or_assoc ||= this
-      record = model_or_assoc.new
-      record.set_creator(current_user)
-      record
+      model_or_assoc.user_new(current_user)
     end
     
     
@@ -338,8 +306,12 @@ module Hobo
     
 
     # Sign-up url for a given user record or user class
-    def signup_url(user_or_class)
-      c = user_or_class.is_a?(Class) ? user_or_class : user_or_class.class
+    def signup_url(user_or_class=nil)
+      c = case user_or_class
+          when Class; user_or_class
+          when nil;   Hobo::User.default_user_model
+          else user_or_class
+          end
       send("#{c.name.underscore}_signup_url") rescue nil
     end
     
@@ -366,23 +338,28 @@ module Hobo
       target = args.empty? || args.first.is_a?(Symbol) ? this : args.shift
       action = args.first
 
-      if target.is_a?(Class)
+      if (origin = target.try.origin)
+        klass = origin.class
+        action = if action == :new
+                   "new_#{target.origin_attribute.to_s.singularize}" 
+                 elsif action.nil?
+                   target.origin_attribute
+                 end
+      elsif target.is_a?(Class)
         klass = target
         action ||= :index
-      elsif target.respond_to?(:member_class)
-        klass = target.member_class
-        action ||= :show
       else
         klass = target.class
         action ||= :show
       end      
       
-      Hobo::ModelRouter.linkable?(subsite, klass, action.to_sym)
+      Hobo::ModelRouter.linkable?(klass, action, options.reverse_merge(:subsite => subsite))
     end
-   
+    
     
     # Convenience helper for the default app
     
+    # FIXME: this should interrogate the routes to find index methods, not the models
     def front_models
       Hobo.models.select {|m| linkable?(m) && !(m < Hobo::User)}
     end
@@ -398,7 +375,7 @@ module Hobo
     def log_debug(*args)
       logger.debug("\n### DRYML Debug ###")
       logger.debug(args.map {|a| PP.pp(a, "")}.join("-------\n"))
-      logger.debug("DRYML THIS = #{Hobo.dom_id(this) rescue this.inspect}")
+      logger.debug("DRYML THIS = #{this.typed_id rescue this.inspect}")
       logger.debug("###################\n")
       args.first unless args.empty?
     end
